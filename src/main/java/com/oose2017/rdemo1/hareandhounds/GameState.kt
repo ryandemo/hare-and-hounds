@@ -13,9 +13,9 @@ fun PieceFromPlayerId(id: Int): Piece? = when(id) {
 enum class Piece {
     HARE, HOUND;
 
-    fun asPlayerId(): String = when(this) {
-        HARE -> "0"
-        HOUND -> "1"
+    fun asPlayerId(): Int = when(this) {
+        HARE -> 0
+        HOUND -> 1
     }
 
     fun opponent(): Piece = when(this) {
@@ -24,4 +24,7 @@ enum class Piece {
     }
 }
 
-data class PiecePosition(val piece: Piece, var x: Int, var y: Int)
+data class BoardPosition(val hare: Position, val hounds: Set<Position>) {
+    fun allPieces(): List<Position> = hounds.toList() + hare
+    fun occupiedAt(position: Position): Boolean = (hare == position || hounds.contains(position))
+}
