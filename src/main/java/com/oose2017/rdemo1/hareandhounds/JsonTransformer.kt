@@ -6,6 +6,7 @@
 package com.oose2017.rdemo1.hareandhounds
 
 import com.google.gson.Gson
+import com.google.gson.JsonParseException
 import spark.Response
 import spark.ResponseTransformer
 
@@ -21,4 +22,9 @@ class JsonTransformer : ResponseTransformer {
         } else gson.toJson(model)
     }
 
+}
+
+interface Validatable {
+    @Throws(JsonParseException::class)
+    fun validate()
 }
