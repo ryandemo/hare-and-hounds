@@ -3,15 +3,27 @@ package com.oose2017.rdemo1.hareandhounds
 import java.util.*
 import kotlin.collections.HashMap
 
-class InvalidGameIDException(override val message: String? = "INVALID_GAME_ID"): Exception()
-class IncorrectTurnException(override val message: String? = "INCORRECT_TURN"): Exception()
-class IllegalMoveException(override val message: String? = "ILLEGAL_MOVE"): Exception()
+open class MoveException: Exception()
+class IncorrectTurnException(override val message: String? = "INCORRECT_TURN"): MoveException()
+class IllegalMoveException(override val message: String? = "ILLEGAL_MOVE"): MoveException()
 
 private val MIN_X = 0
 private val MAX_X = 4
 private val MIN_Y = 0
 private val MAX_Y = 2
-private val ILLEGAL_POSITIONS = listOf<Position>(
+private val MOVABLE_THREE_DIRECTIONS = setOf<Position>(
+        Position(0, 1),
+        Position(2, 0),
+        Position(2, 2),
+        Position(4, 1)
+)
+private val NOT_DIAGONALLY_MOVABLE = setOf<Position>(
+        Position(1, 1),
+        Position(3, 1),
+        Position(2, 0),
+        Position(2, 2)
+)
+private val ILLEGAL_POSITIONS = setOf<Position>(
         Position(MIN_X, MIN_Y),
         Position(MIN_X, MAX_Y),
         Position(MAX_X, MIN_Y),
@@ -23,16 +35,30 @@ data class Position(val x: Int, val y: Int) {
         if (ILLEGAL_POSITIONS.contains(this)) {
             throw IllegalMoveException()
         }
-
         if (x < MIN_X || x > MAX_X || y < MIN_Y || y > MAX_Y) {
             throw IllegalMoveException()
         }
     }
 
     fun validateAdjacentTo(other: Position) {
-        if (Math.abs(other.x - x) > 1 || Math.abs(other.y - y) > 1) {
+        if (!adjacentTo(other)) {
             throw IllegalMoveException()
         }
+    }
+
+    fun adjacentTo(other: Position): Boolean {
+        if (NOT_DIAGONALLY_MOVABLE.contains(this)
+                && !((Math.abs(other.x - x) == 1 && Math.abs(other.y - y) == 0)
+                || (Math.abs(other.x - x) == 0 && Math.abs(other.y - y) == 1))) {
+            return false
+        } else if (Math.abs(other.x - x) > 1 || Math.abs(other.y - y) > 1) {
+            return false
+        }
+        return true
+    }
+
+    fun leftOf(other: Position): Boolean {
+        return x < other.x
     }
 }
 
@@ -84,7 +110,7 @@ data class GameBoard(val id: UUID, var players: List<Piece>, var state: GameStat
 
         // Check that from position is a hound
         var hounds = positions.last().hounds.toMutableSet()
-        val houndExistsAtFrom = hounds.removeIf { it == Position(from.x, from.y) }
+        val houndExistsAtFrom = hounds.removeIf { it == from }
         if (!houndExistsAtFrom) {
             throw IllegalMoveException()
         }
@@ -120,10 +146,10 @@ data class GameBoard(val id: UUID, var players: List<Piece>, var state: GameStat
 
         when (state) {
             GameState.TURN_HOUND -> {
-                if (checkHoundWin()) {
-                    state = GameState.WIN_HOUND
-                } else if (stallOccurred) {
+                if (stallOccurred) {
                     state = GameState.WIN_HARE_BY_STALLING
+                } else if (checkHoundWin()) {
+                    state = GameState.WIN_HOUND
                 } else {
                     state = GameState.TURN_HARE
                 }
@@ -141,13 +167,27 @@ data class GameBoard(val id: UUID, var players: List<Piece>, var state: GameStat
     }
 
     private fun checkHoundWin(): Boolean {
+        val hare = positions.last().hare
 
+        if (MOVABLE_THREE_DIRECTIONS.contains(hare)) {
+            positions.last().hounds.forEach {
+                if (!it.adjacentTo(hare)) {
+                    return false
+                }
+            }
+            return true
+        }
         return false
     }
 
     private fun checkHareWinEscape(): Boolean {
-
-        return false
+        val hare = positions.last().hare
+        for (hound in positions.last().hounds) {
+            if (hound.leftOf(hare)) {
+                return false
+            }
+        }
+        return true
     }
 
 }
