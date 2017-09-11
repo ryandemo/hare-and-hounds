@@ -1,76 +1,126 @@
 package com.oose2017.rdemo1.hareandhounds
 
+import com.google.gson.Gson
+import com.google.gson.GsonBuilder
+import com.google.gson.JsonParseException
+import com.google.gson.JsonSyntaxException
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+import spark.Response
+import spark.Route
+
+import spark.Spark.*
 import java.util.*
 
-data class GamePlayerInfo(val gameId: String, val playerId: String, val pieceType: String)
-data class PlayerInfo(val playerId: String)
-data class PieceInfo(val pieceType: String, val x: Int, val y: Int)
-data class StateInfo(val state: GameState)
+data class ErrorReason(val reason: String)
 
-//class GameException(override var message:String): Exception()
-class NotFoundException: Exception()
-class GameFullException: Exception()
-class InvalidPlayerIDException(override val message: String? = "INVALID_PLAYER_ID"): Exception()
+class GameController(val gameService: GameService) {
 
-class GameController(val gameDAO: GameDAO) {
+    private val API_CONTEXT = "/hareandhounds/api/games"
+    private val logger = LoggerFactory.getLogger(GameController::class.java)
 
-    fun createGame(piece: Piece): GamePlayerInfo {
-        val uuid = UUID.randomUUID()
-        val pieces = listOf<Piece>(piece)
-        val positions = BoardPosition(
-                Position(4, 1),
-                setOf<Position>(
-                        Position(0, 1),
-                        Position(1, 0),
-                        Position(1, 2)
-                ))
-        val game = GameBoard(uuid, pieces, GameState.WAITING_FOR_SECOND_PLAYER, mutableListOf(positions))
+    private val gson = GsonBuilder().setPrettyPrinting().create()
 
-        gameDAO.insert(game)
-        return GamePlayerInfo(uuid.toString(), pieces[0].asPlayerId().toString(), pieces[0].toString())
+    init {
+        setupEndpoints()
     }
 
-    fun joinGame(id: UUID): GamePlayerInfo {
-        val oldGameBoard = gameDAO.findById(id) ?: throw NotFoundException()
-        if (oldGameBoard.players.size > 1) {
-            throw GameFullException()
-        }
-
-        val piece = oldGameBoard.players[0].opponent()
-        val players = listOf<Piece>(
-                oldGameBoard.players[0],
-                oldGameBoard.players[0].opponent()
-        )
-        val game = GameBoard(oldGameBoard.id, players, GameState.TURN_HOUND, oldGameBoard.positions)
-
-        gameDAO.update(game)
-        return GamePlayerInfo(game.id.toString(), players[1].asPlayerId().toString(), players[1].toString())
+    fun render(model: Any): String {
+        return if (model is Response) {
+            gson.toJson(HashMap<Any, Any>())
+        } else gson.toJson(model)
     }
 
-    fun updateGame(id: UUID, playerId: Int, fromX: Int, fromY: Int, toX: Int, toY: Int): PlayerInfo {
-        val game = gameDAO.findById(id) ?: throw NotFoundException()
-        val piece = PieceFromPlayerId(playerId) ?: throw InvalidPlayerIDException()
-
-        game.updatePosition(piece, fromX, fromY, toX, toY)
-        gameDAO.update(game)  // will throw if illegal move
-
-        return PlayerInfo(playerId.toString())
+    @Throws(JsonSyntaxException::class)
+    fun <T: Validatable> Gson.fromJsonStrict(json: String, classOfT: Class<T>): T {
+        val obj = gson.fromJson<T>(json, classOfT)
+        obj.validate()
+        return obj
     }
 
-    fun getGameBoard(id: UUID): List<PieceInfo> {
-        val game = gameDAO.findById(id) ?: throw NotFoundException()
+    private fun setupEndpoints() {
 
-        val houndInfo = game.positions.last().hounds.map { PieceInfo("HOUND", it.x, it.y) }
+        post(API_CONTEXT, "application/json", { request, response ->
+            try {
+                val pieceTypeInfo = gson.fromJsonStrict(request.body(), PieceTypeInfo::class.java)
+                response.status(201)
+                gameService.createGame(pieceTypeInfo.pieceType)
+            } catch (e: JsonParseException) {
+                logger.error(e.message)
+                response.status(400)
+            } catch (e: JsonSyntaxException) {
+                logger.error(e.message)
+                response.status(400)
+            } catch (e: Exception) {
+                logger.error(e.message)
+                response.status(500)
+            }
+        }, this::render)
 
-        val hare = game.positions.last().hare
-        val hareInfo = PieceInfo("HARE", hare.x, hare.y)
+        put(API_CONTEXT + "/:gameId", "application/json", { request, response ->
+            try {
+                val uuid = UUID.fromString(request.params("gameId"))
+                gameService.joinGame(uuid)
+            } catch (e: InvalidIDException) {
+                logger.error(e.message)
+                response.status(404)
+            } catch (e: Exception) {
+                logger.error(e.message)
+                response.status(500)
+            }
+        }, this::render)
 
-        return houndInfo + hareInfo
-    }
+        post(API_CONTEXT + "/:gameId/turns", "application/json", { request, response ->
+            try {
+                val uuid = UUID.fromString(request.params("gameId"))
+                val moveInfo = gson.fromJson(request.body(), MoveInfo::class.java)
+                gameService.updateGame(uuid, moveInfo)
+            } catch (e: JsonParseException) {
+                logger.error(e.message)
+                response.status(400)
+            } catch (e: JsonSyntaxException) {
+                logger.error(e.message)
+                response.status(400)
+            } catch (e: InvalidIDException) {
+                logger.error(e.message)
+                ErrorReason(e.message ?: "INVALID_ID")
+                response.status(404)
+            } catch (e: MoveException) {
+                logger.error(e.message)
+                ErrorReason(e.message ?: "INVALID_ID")
+                response.status(422)
+            } catch (e: Exception) {
+                logger.error(e.message)
+                response.status(500)
+            }
+        }, this::render)
 
-    fun getGameState(id: UUID): StateInfo {
-        val game = gameDAO.findById(id) ?: throw NotFoundException()
-        return StateInfo(game.state)
+        get(API_CONTEXT + "/:gameId/board", "application/json", { request, response ->
+            try {
+                val uuid = UUID.fromString(request.params("gameId"))
+                gameService.getGameBoard(uuid)
+            } catch (e: InvalidIDException) {
+                logger.error(e.message)
+                response.status(404)
+            } catch (e: Exception) {
+                logger.error(e.message)
+                response.status(500)
+            }
+        }, this::render)
+
+        get(API_CONTEXT + "/:gameId/state", "application/json", { request, response ->
+            try {
+                val uuid = UUID.fromString(request.params("gameId"))
+                gameService.getGameState(uuid)
+            } catch (e: InvalidIDException) {
+                logger.error(e.message)
+                response.status(404)
+            } catch (e: Exception) {
+                logger.error(e.message)
+                response.status(500)
+            }
+        }, this::render)
+
     }
 
 }
