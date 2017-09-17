@@ -2,9 +2,6 @@ package com.oose2017.rdemo1.hareandhounds
 
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
-import org.sql2o.Connection
-import org.sql2o.Sql2o
-import org.sqlite.SQLiteDataSource
 import spark.Spark
 import spark.utils.IOUtils
 
@@ -13,7 +10,6 @@ import java.io.OutputStreamWriter
 import java.lang.reflect.Type
 import java.net.URL
 import java.net.HttpURLConnection
-import java.text.SimpleDateFormat
 import java.util.*
 import java.util.stream.*
 
@@ -29,7 +25,7 @@ class TestGameServer {
     @Before
     fun setupTest() {
         // Start main server
-        Bootstrap.main(null)
+        Bootstrap.main(emptyArray<String>())
         Spark.awaitInitialization()
     }
 
@@ -44,7 +40,7 @@ class TestGameServer {
 
     @Test
     fun testCreateGame() {
-
+        
     }
 
     @Test

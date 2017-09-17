@@ -1,14 +1,8 @@
 package com.oose2017.rdemo1.hareandhounds
 
 import org.slf4j.LoggerFactory
-import org.sqlite.SQLiteDataSource
-
-import javax.sql.DataSource
 
 import spark.Spark.*
-
-import java.nio.file.Files
-import java.nio.file.Paths
 
 object Bootstrap {
     val IP_ADDRESS = "localhost"

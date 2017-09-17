@@ -25,14 +25,14 @@ class GameController(val gameService: GameService) {
         setupEndpoints()
     }
 
-    fun render(model: Any): String {
+    private fun render(model: Any): String {
         return if (model is Response) {
             gson.toJson(HashMap<Any, Any>())
         } else gson.toJson(model)
     }
 
     @Throws(JsonSyntaxException::class)
-    fun <T: Validatable> Gson.fromJsonStrict(json: String, classOfT: Class<T>): T {
+    private fun <T: Validatable> Gson.fromJsonStrict(json: String, classOfT: Class<T>): T {
         val obj = gson.fromJson<T>(json, classOfT)
         obj.validate()
         return obj
