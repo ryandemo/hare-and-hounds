@@ -1,10 +1,11 @@
 package com.oose2017.rdemo1.hareandhounds
 
 import java.util.*
+import java.util.concurrent.ConcurrentHashMap
 
 class GameDAO {
 
-    private var games = HashMap<UUID, GameBoard>()
+    private var games = ConcurrentHashMap<UUID, GameBoard>()
 
     fun insert(game: GameBoard) {
         games[game.id] = game
