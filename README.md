@@ -1,8 +1,17 @@
 Hare and Hounds Web App
 =================
 
-This repository contains a hare and hounds game web application.  It is a complete web stack from frontend to server to database.
+This repository contains a hare and hounds game web application.  It is a complete web stack from frontend to server to database. The backend is written in Kotlin.
 
+Author
+-----
+Ryan Demo
+
+601.421 Object Oriented Software Engineering
+
+Johns Hopkins University
+
+Fall 2017
 
 Setup
 -----
@@ -23,7 +32,7 @@ If you instead want to compile and run from the command line, you will need the 
 
 ```console
 mvn package
-java -jar target/hareandhounds1-1.0-SNAPSHOT.jar
+java -jar target/hare-and-hounds-1.0-SNAPSHOT.jar
 ```
 
 Now simply point your browser to http://localhost:8080 to use the application.
