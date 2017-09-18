@@ -6,6 +6,7 @@ import com.google.gson.JsonParseException
 import com.google.gson.JsonSyntaxException
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import spark.Request
 import spark.Response
 import spark.Route
 
@@ -38,6 +39,14 @@ class GameController(val gameService: GameService) {
         return obj
     }
 
+    private fun getGameIdFromRequest(request: Request): UUID {
+        try {
+            return UUID.fromString(request.params("gameId"))
+        } catch (e: IllegalArgumentException) {
+            throw InvalidGameIDException()
+        }
+    }
+
     private fun setupEndpoints() {
 
         post(API_CONTEXT, "application/json", { request, response ->
@@ -60,7 +69,7 @@ class GameController(val gameService: GameService) {
 
         put(API_CONTEXT + "/:gameId", "application/json", { request, response ->
             try {
-                val uuid = UUID.fromString(request.params("gameId")) ?: throw InvalidGameIDException()
+                val uuid = getGameIdFromRequest(request)
                 gameService.joinGame(uuid)
             } catch (e: InvalidIDException) {
                 logger.error(e.message)
@@ -76,7 +85,7 @@ class GameController(val gameService: GameService) {
 
         post(API_CONTEXT + "/:gameId/turns", "application/json", { request, response ->
             try {
-                val uuid = UUID.fromString(request.params("gameId")) ?: throw InvalidGameIDException()
+                val uuid = getGameIdFromRequest(request)
                 if (request.body().isNullOrEmpty()) throw JsonParseException("JSON body is null")
                 val moveInfo = gson.fromJson(request.body(), MoveInfo::class.java)
                 gameService.updateGame(uuid, moveInfo)
@@ -102,7 +111,7 @@ class GameController(val gameService: GameService) {
 
         get(API_CONTEXT + "/:gameId/board", "application/json", { request, response ->
             try {
-                val uuid = UUID.fromString(request.params("gameId")) ?: throw InvalidGameIDException()
+                val uuid = getGameIdFromRequest(request)
                 gameService.getGameBoard(uuid)
             } catch (e: InvalidIDException) {
                 logger.error(e.message)
@@ -115,7 +124,7 @@ class GameController(val gameService: GameService) {
 
         get(API_CONTEXT + "/:gameId/state", "application/json", { request, response ->
             try {
-                val uuid = UUID.fromString(request.params("gameId")) ?: throw InvalidGameIDException()
+                val uuid = getGameIdFromRequest(request)
                 gameService.getGameState(uuid)
             } catch (e: InvalidIDException) {
                 logger.error(e.message)
