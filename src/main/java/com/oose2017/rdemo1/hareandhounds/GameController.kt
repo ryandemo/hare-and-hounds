@@ -64,6 +64,9 @@ class GameController(val gameService: GameService) {
             } catch (e: InvalidIDException) {
                 logger.error(e.message)
                 response.status(404)
+            } catch (e: GameFullException) {
+                logger.error(e.message)
+                response.status(410)
             } catch (e: Exception) {
                 logger.error(e.message)
                 response.status(500)
