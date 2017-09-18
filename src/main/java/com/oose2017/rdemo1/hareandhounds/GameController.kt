@@ -59,7 +59,7 @@ class GameController(val gameService: GameService) {
 
         put(API_CONTEXT + "/:gameId", "application/json", { request, response ->
             try {
-                val uuid = UUID.fromString(request.params("gameId"))
+                val uuid = UUID.fromString(request.params("gameId")) ?: throw InvalidGameIDException()
                 gameService.joinGame(uuid)
             } catch (e: InvalidIDException) {
                 logger.error(e.message)
@@ -75,7 +75,7 @@ class GameController(val gameService: GameService) {
 
         post(API_CONTEXT + "/:gameId/turns", "application/json", { request, response ->
             try {
-                val uuid = UUID.fromString(request.params("gameId"))
+                val uuid = UUID.fromString(request.params("gameId")) ?: throw InvalidGameIDException()
                 val moveInfo = gson.fromJson(request.body(), MoveInfo::class.java)
                 gameService.updateGame(uuid, moveInfo)
             } catch (e: JsonParseException) {
@@ -100,7 +100,7 @@ class GameController(val gameService: GameService) {
 
         get(API_CONTEXT + "/:gameId/board", "application/json", { request, response ->
             try {
-                val uuid = UUID.fromString(request.params("gameId"))
+                val uuid = UUID.fromString(request.params("gameId")) ?: throw InvalidGameIDException()
                 gameService.getGameBoard(uuid)
             } catch (e: InvalidIDException) {
                 logger.error(e.message)
@@ -113,7 +113,7 @@ class GameController(val gameService: GameService) {
 
         get(API_CONTEXT + "/:gameId/state", "application/json", { request, response ->
             try {
-                val uuid = UUID.fromString(request.params("gameId"))
+                val uuid = UUID.fromString(request.params("gameId")) ?: throw InvalidGameIDException()
                 gameService.getGameState(uuid)
             } catch (e: InvalidIDException) {
                 logger.error(e.message)
