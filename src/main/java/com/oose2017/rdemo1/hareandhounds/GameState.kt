@@ -34,7 +34,7 @@ enum class Piece {
  * @param id playerId for the piece: 0 is hare, 1 is hound.
  * @return a `Piece` if the playerId mapped to one.
  */
-fun PieceFromPlayerId(id: Int): Piece? = when(id) {
+fun PieceFromPlayerId(id: Int?): Piece? = when(id) {
     0 -> Piece.HARE
     1 -> Piece.HOUND
     else -> null

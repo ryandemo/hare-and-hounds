@@ -41,7 +41,7 @@ data class PieceTypeInfo(val pieceType: Piece): Validatable {
  * @param toX x coordinate to move player's piece to.
  * @param toY y coordinate to move player's piece to.
  */
-data class MoveInfo(val playerId: Int, val fromX: Int, val fromY: Int, val toX: Int, val toY: Int)
+data class MoveInfo(val playerId: String, val fromX: Int, val fromY: Int, val toX: Int, val toY: Int)
 
 /**
  * Information about a piece and its position.
@@ -161,7 +161,7 @@ class GameService(val gameDAO: GameDAO) {
         val game = gameDAO.findById(id) ?: throw InvalidGameIDException()
 
         // Find the piece type from the playerId
-        val piece = PieceFromPlayerId(moveInfo.playerId) ?: throw InvalidPlayerIDException()
+        val piece = PieceFromPlayerId(moveInfo.playerId.toInt()) ?: throw InvalidPlayerIDException()
 
         // Throw if trying to move as a player who has not joined
         if (!game.players.contains(piece)) throw InvalidPlayerIDException()
