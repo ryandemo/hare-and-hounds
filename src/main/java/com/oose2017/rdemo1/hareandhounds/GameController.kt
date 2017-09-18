@@ -38,6 +38,9 @@ class GameController(val gameService: GameService) {
 
     /**
      * Renders responses as JSON.
+     *
+     * @param model POJO model to render into JSON.
+     * @return JSON string serialization of POJO or empty JSON dictionary.
      */
     private fun render(model: Any): String {
         return if (model is Response) {
@@ -47,7 +50,7 @@ class GameController(val gameService: GameService) {
 
     /**
      * Strictly deserializes JSON into POJOs conforming to the Validatable interface.
-     * Necessary to validate enum creation from a string.
+     * Necessary to validate enum creation from a string; validation function will throw if deserialization is invalid.
      */
     @Throws(JsonSyntaxException::class)
     private fun <T: Validatable> Gson.fromJsonStrict(json: String, classOfT: Class<T>): T {
@@ -113,7 +116,7 @@ class GameController(val gameService: GameService) {
         post(API_CONTEXT + "/:gameId/turns", "application/json", { request, response ->
             try {
                 val uuid = getGameIdFromRequest(request)
-                if (request.body().isNullOrEmpty()) throw JsonParseException("JSON body is null")
+//                if (request.body().isNullOrEmpty()) throw JsonParseException("JSON body is null")
                 val moveInfo = gson.fromJson(request.body(), MoveInfo::class.java)
                 gameService.updateGame(uuid, moveInfo)
             } catch (e: JsonParseException) {
