@@ -105,16 +105,16 @@ data class Position(val x: Int, val y: Int) {
  * @property id the uuid for the game.
  * @property players the list of `Piece`s in the game (at most two).
  * @property state the play state of the game.
- * @property positions historical list of `BoardPosition`s, with the current at the end.
+ * @property positions the hare and hounds' positions encapsulated in a `BoardPositions`.
  */
-data class GameBoard(val id: UUID, var players: List<Piece>, var state: GameState, var positions: MutableList<BoardPosition>) {
+data class GameBoard(val id: UUID, var players: List<Piece>, var state: GameState, var positions: BoardPositions) {
 
     private var stallOccurred = false
-    private var boardPositionOccurrences = HashMap<BoardPosition, Int>()
+    private var boardPositionOccurrences = HashMap<BoardPositions, Int>()
 
     init {
-        // Record the initial board position
-        boardPositionOccurrences[positions[0]] = 1
+        // Record the initial board position's frequency as 1
+        boardPositionOccurrences[positions] = 1
     }
 
     /** Updates a piece's position from one position to another. Throws if the move is invalid. */
@@ -140,7 +140,7 @@ data class GameBoard(val id: UUID, var players: List<Piece>, var state: GameStat
         from.validateAdjacentTo(to)
 
         // Check that a piece can't move to a position already occupied by a piece
-        if (positions.last().occupiedAt(to)) {
+        if (positions.occupiedAt(to)) {
             throw IllegalMoveException()
         }
 
@@ -163,17 +163,19 @@ data class GameBoard(val id: UUID, var players: List<Piece>, var state: GameStat
             throw IllegalMoveException()
         }
 
-        // Check that from position is a hound
-        var hounds = positions.last().hounds.toMutableSet()
+        // Check that from position is a hound and remove `from` from positions
+        var hounds = positions.hounds.toMutableSet()
         val houndExistsAtFrom = hounds.removeIf { it == from }
         if (!houndExistsAtFrom) {
             throw IllegalMoveException()
         }
 
+        // Add the new hound position to the list of hound positions
         hounds.add(Position(to.x, to.y))
-        positions.add(BoardPosition(positions.last().hare, hounds))
 
-        updateOccurrences(positions.last())
+        // Set the new `BoardPosition`
+        positions = BoardPositions(positions.hare, hounds)
+        updateOccurrences(positions)
 
     }
 
@@ -181,18 +183,18 @@ data class GameBoard(val id: UUID, var players: List<Piece>, var state: GameStat
     private fun moveHare(from: Position, to: Position) {
 
         // Check that from position is a hare
-        if (positions.last().hare != from) {
+        if (positions.hare != from) {
             throw IllegalMoveException()
         }
 
         // Update the hare's position
-        positions.add(BoardPosition(to, positions.last().hounds))
-        updateOccurrences(positions.last())
+        positions = BoardPositions(to, positions.hounds)
+        updateOccurrences(positions)
 
     }
 
     /** Updates the number of occurrences that the current board position has been in play. */
-    private fun updateOccurrences(position: BoardPosition) {
+    private fun updateOccurrences(position: BoardPositions) {
         val occurrences = boardPositionOccurrences[position]?.plus(1) ?: 1
         boardPositionOccurrences[position] = occurrences
 
@@ -234,11 +236,11 @@ data class GameBoard(val id: UUID, var players: List<Piece>, var state: GameStat
      * @return True if hounds win, false if not.
      */
     private fun checkHoundWin(): Boolean {
-        val hare = positions.last().hare
+        val hare = positions.hare
 
         // Hare must be cornered by the three hounds to lose, therefore hare must be in a position only adjacent to three others
         if (MOVABLE_THREE_DIRECTIONS.contains(hare)) {
-            positions.last().hounds.forEach {
+            positions.hounds.forEach {
                 if (!it.adjacentTo(hare)) {
                     return false
                 }
@@ -254,8 +256,8 @@ data class GameBoard(val id: UUID, var players: List<Piece>, var state: GameStat
      * @return True if hare escaped, false if not.
      */
     private fun checkHareWinEscape(): Boolean {
-        val hare = positions.last().hare
-        for (hound in positions.last().hounds) {
+        val hare = positions.hare
+        for (hound in positions.hounds) {
             if (hound.leftOf(hare)) {
                 return false
             }

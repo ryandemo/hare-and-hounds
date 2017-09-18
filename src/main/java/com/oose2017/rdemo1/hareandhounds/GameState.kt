@@ -32,7 +32,7 @@ enum class Piece {
     }
 }
 
-data class BoardPosition(val hare: Position, val hounds: Set<Position>) {
+data class BoardPositions(val hare: Position, val hounds: Set<Position>) {
     fun allPieces(): List<Position> = hounds.toList() + hare
     fun occupiedAt(position: Position): Boolean = (hare == position || hounds.contains(position))
 }

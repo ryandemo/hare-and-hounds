@@ -26,14 +26,14 @@ class GameService(val gameDAO: GameDAO) {
     fun createGame(piece: Piece): GamePlayerInfo {
         val uuid = UUID.randomUUID()
         val pieces = listOf<Piece>(piece)
-        val positions = BoardPosition(
+        val positions = BoardPositions(
                 Position(4, 1),
                 setOf<Position>(
                         Position(0, 1),
                         Position(1, 0),
                         Position(1, 2)
                 ))
-        val game = GameBoard(uuid, pieces, GameState.WAITING_FOR_SECOND_PLAYER, mutableListOf(positions))
+        val game = GameBoard(uuid, pieces, GameState.WAITING_FOR_SECOND_PLAYER, positions)
 
         gameDAO.insert(game)
         return GamePlayerInfo(uuid.toString(), pieces[0].asPlayerId().toString(), pieces[0].toString())
@@ -69,9 +69,9 @@ class GameService(val gameDAO: GameDAO) {
     fun getGameBoard(id: UUID): List<PieceInfo> {
         val game = gameDAO.findById(id) ?: throw InvalidGameIDException()
 
-        val houndInfo = game.positions.last().hounds.map { PieceInfo("HOUND", it.x, it.y) }
+        val houndInfo = game.positions.hounds.map { PieceInfo("HOUND", it.x, it.y) }
 
-        val hare = game.positions.last().hare
+        val hare = game.positions.hare
         val hareInfo = PieceInfo("HARE", hare.x, hare.y)
 
         return houndInfo + hareInfo
