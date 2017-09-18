@@ -13,8 +13,18 @@ import spark.Route
 import spark.Spark.*
 import java.util.*
 
+/**
+ * Describes the reason for an error.
+ *
+ * @property reason the error message.
+ */
 data class ErrorReason(val reason: String)
 
+/**
+ * Controls the game sessions through a game service.
+ *
+ * @property gameService the game service to manipulate games through.
+ */
 class GameController(val gameService: GameService) {
 
     private val API_CONTEXT = "/hareandhounds/api/games"
@@ -26,12 +36,19 @@ class GameController(val gameService: GameService) {
         setupEndpoints()
     }
 
+    /**
+     * Renders responses as JSON.
+     */
     private fun render(model: Any): String {
         return if (model is Response) {
             gson.toJson(HashMap<Any, Any>())
         } else gson.toJson(model)
     }
 
+    /**
+     * Strictly deserializes JSON into POJOs conforming to the Validatable interface.
+     * Necessary to validate enum creation from a string.
+     */
     @Throws(JsonSyntaxException::class)
     private fun <T: Validatable> Gson.fromJsonStrict(json: String, classOfT: Class<T>): T {
         val obj = gson.fromJson<T>(json, classOfT)
@@ -39,6 +56,12 @@ class GameController(val gameService: GameService) {
         return obj
     }
 
+    /**
+     * Gets the game UUID from a request's parameters.
+     *
+     * @param request request from which to get the game id through its link parameters.
+     * @return UUID of the game
+     */
     private fun getGameIdFromRequest(request: Request): UUID {
         try {
             return UUID.fromString(request.params("gameId"))
@@ -47,8 +70,10 @@ class GameController(val gameService: GameService) {
         }
     }
 
+    /** Sets up endpoints. */
     private fun setupEndpoints() {
 
+        // Post request to create a game
         post(API_CONTEXT, "application/json", { request, response ->
             try {
                 if (request.body().isNullOrEmpty()) throw JsonParseException("JSON body is null")
@@ -67,6 +92,7 @@ class GameController(val gameService: GameService) {
             }
         }, this::render)
 
+        // Put request to join a game
         put(API_CONTEXT + "/:gameId", "application/json", { request, response ->
             try {
                 val uuid = getGameIdFromRequest(request)
@@ -83,6 +109,7 @@ class GameController(val gameService: GameService) {
             }
         }, this::render)
 
+        // Post request to update a game
         post(API_CONTEXT + "/:gameId/turns", "application/json", { request, response ->
             try {
                 val uuid = getGameIdFromRequest(request)
@@ -109,6 +136,7 @@ class GameController(val gameService: GameService) {
             }
         }, this::render)
 
+        // Get request to describe a game's board
         get(API_CONTEXT + "/:gameId/board", "application/json", { request, response ->
             try {
                 val uuid = getGameIdFromRequest(request)
@@ -122,6 +150,7 @@ class GameController(val gameService: GameService) {
             }
         }, this::render)
 
+        // Get request to describe a game's state
         get(API_CONTEXT + "/:gameId/state", "application/json", { request, response ->
             try {
                 val uuid = getGameIdFromRequest(request)
