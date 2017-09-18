@@ -83,12 +83,12 @@ class GameController(val gameService: GameService) {
                 response.status(400)
             } catch (e: InvalidIDException) {
                 logger.error(e.message)
-                ErrorReason(e.message ?: "INVALID_ID")
                 response.status(404)
+                ErrorReason(e.message ?: "INVALID_ID")
             } catch (e: MoveException) {
                 logger.error(e.message)
-                ErrorReason(e.message ?: "INVALID_ID")
                 response.status(422)
+                ErrorReason(e.message ?: "INVALID_ID")
             } catch (e: Exception) {
                 logger.error(e.message)
                 response.status(500)
