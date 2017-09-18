@@ -161,7 +161,8 @@ class GameService(val gameDAO: GameDAO) {
         val game = gameDAO.findById(id) ?: throw InvalidGameIDException()
 
         // Find the piece type from the playerId
-        val piece = PieceFromPlayerId(moveInfo.playerId.toInt()) ?: throw InvalidPlayerIDException()
+        val idAsInt = moveInfo.playerId.toIntOrNull() ?: throw InvalidPlayerIDException()
+        val piece = PieceFromPlayerId(idAsInt) ?: throw InvalidPlayerIDException()
 
         // Throw if trying to move as a player who has not joined
         if (!game.players.contains(piece)) throw InvalidPlayerIDException()
