@@ -102,7 +102,7 @@ class GameController(val gameService: GameService) {
             } catch (e: MoveException) {
                 logger.error(e.message)
                 response.status(422)
-                ErrorReason(e.message ?: "INVALID_ID")
+                ErrorReason(e.message ?: "ILLEGAL_MOVE")
             } catch (e: Exception) {
                 logger.error(e.message)
                 response.status(500)

@@ -30,7 +30,16 @@ private val ILLEGAL_POSITIONS = setOf<Position>(
         Position(MAX_X, MAX_Y)
 )
 
+/**
+ * A 2D position.
+ *
+ * @property x the horizontal position.
+ * @property y the vertical position.
+ */
 data class Position(val x: Int, val y: Int) {
+    /**
+     * Validates that the position is within the bounds of the game board.
+     */
     fun validateOnBoard() {
         if (ILLEGAL_POSITIONS.contains(this)) {
             throw IllegalMoveException()
@@ -40,23 +49,38 @@ data class Position(val x: Int, val y: Int) {
         }
     }
 
+    /**
+     * Validates adjacency to another position. Evaluates `adjacentTo(other: Position)` and throws on false.
+     */
     fun validateAdjacentTo(other: Position) {
         if (!adjacentTo(other)) {
             throw IllegalMoveException()
         }
     }
 
+    /**
+     * Checks if this position is adjacent to another.
+     *
+     * @return True if adjacent, false if same point or not adjacent.
+     */
     fun adjacentTo(other: Position): Boolean {
-        if (NOT_DIAGONALLY_MOVABLE.contains(this)
+        if (this == other) {  // Make sure they're not the same point
+            return false
+        } else if (NOT_DIAGONALLY_MOVABLE.contains(this)  // If you can't move the piece diagonally, make sure the adjacency is only vertical or horizontal
                 && !((Math.abs(other.x - x) == 1 && Math.abs(other.y - y) == 0)
                 || (Math.abs(other.x - x) == 0 && Math.abs(other.y - y) == 1))) {
             return false
-        } else if (Math.abs(other.x - x) > 1 || Math.abs(other.y - y) > 1) {
+        } else if (Math.abs(other.x - x) > 1 || Math.abs(other.y - y) > 1) {  // If you can move the piece diagonally, make sure the move is only to a connected position
             return false
         }
         return true
     }
 
+    /**
+     * Checks if one position is left of another.
+     *
+     * @return True if left, false if right or horizontally aligned.
+     */
     fun leftOf(other: Position): Boolean {
         return x < other.x
     }
