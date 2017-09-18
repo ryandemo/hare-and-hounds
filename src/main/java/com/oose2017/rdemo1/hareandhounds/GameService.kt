@@ -58,6 +58,7 @@ class GameService(val gameDAO: GameDAO) {
     fun updateGame(id: UUID, moveInfo: MoveInfo): PlayerInfo {
         val game = gameDAO.findById(id) ?: throw InvalidGameIDException()
         val piece = PieceFromPlayerId(moveInfo.playerId) ?: throw InvalidPlayerIDException()
+        if (!game.players.contains(piece)) throw InvalidPlayerIDException()  // throw if trying to move as a player who has not joined
 
         game.updatePosition(piece, moveInfo.fromX, moveInfo.fromY, moveInfo.toX, moveInfo.toY)
         gameDAO.update(game)  // will throw if illegal move
