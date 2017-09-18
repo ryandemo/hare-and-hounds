@@ -34,6 +34,17 @@ val ILLEGAL_POSITIONS = setOf<Position>(
 )
 
 /**
+ * Encapsulates the hare's position and a set of hound positions.
+ *
+ * @property hare position of the hare.
+ * @property hounds set of positions of the hounds.
+ */
+data class BoardPositions(val hare: Position, val hounds: Set<Position>) {
+    fun allPieces(): List<Position> = hounds.toList() + hare
+    fun occupiedAt(position: Position): Boolean = (hare == position || hounds.contains(position))
+}
+
+/**
  * A 2D position.
  *
  * @property x the horizontal position.
