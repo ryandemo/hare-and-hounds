@@ -42,6 +42,7 @@ class GameController(val gameService: GameService) {
 
         post(API_CONTEXT, "application/json", { request, response ->
             try {
+                if (request.body().isNullOrEmpty()) throw JsonParseException("JSON body is null")
                 val pieceTypeInfo = gson.fromJsonStrict(request.body(), PieceTypeInfo::class.java)
                 response.status(201)
                 gameService.createGame(pieceTypeInfo.pieceType)
@@ -76,6 +77,7 @@ class GameController(val gameService: GameService) {
         post(API_CONTEXT + "/:gameId/turns", "application/json", { request, response ->
             try {
                 val uuid = UUID.fromString(request.params("gameId")) ?: throw InvalidGameIDException()
+                if (request.body().isNullOrEmpty()) throw JsonParseException("JSON body is null")
                 val moveInfo = gson.fromJson(request.body(), MoveInfo::class.java)
                 gameService.updateGame(uuid, moveInfo)
             } catch (e: JsonParseException) {
