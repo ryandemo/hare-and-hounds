@@ -3,26 +3,41 @@ package com.oose2017.rdemo1.hareandhounds
 import java.util.*
 import kotlin.collections.HashMap
 
+/** Base `Exception` for attempted moves. */
 open class MoveException: Exception()
+
+/** Exception to be thrown when a player attempts to move their piece when it is not their turn. */
 class IncorrectTurnException(override val message: String? = "INCORRECT_TURN"): MoveException()
+
+/** Exception to be thrown when a player attempts to make an illegal move. */
 class IllegalMoveException(override val message: String? = "ILLEGAL_MOVE"): MoveException()
 
+/** Minimum x value of the game board. */
 private val MIN_X = 0
+/** Maximum x value of the game board. */
 private val MAX_X = 4
+/** Minimum y value of the game board. */
 private val MIN_Y = 0
+/** Maximum y value of the game board. */
 private val MAX_Y = 2
+
+/** The set of `Position`s from which a piece can only move to three other `Position`s. */
 private val MOVABLE_THREE_DIRECTIONS = setOf<Position>(
         Position(0, 1),
         Position(2, 0),
         Position(2, 2),
         Position(4, 1)
 )
+
+/** The set of `Position`s from which a piece cannot move diagonally. */
 private val NOT_DIAGONALLY_MOVABLE = setOf<Position>(
         Position(1, 1),
         Position(3, 1),
         Position(2, 0),
         Position(2, 2)
 )
+
+/** The set of illegal `Position`s within the bounds of the game board. */
 private val ILLEGAL_POSITIONS = setOf<Position>(
         Position(MIN_X, MIN_Y),
         Position(MIN_X, MAX_Y),
@@ -49,9 +64,7 @@ data class Position(val x: Int, val y: Int) {
         }
     }
 
-    /**
-     * Validates adjacency to another position. Evaluates `adjacentTo(other: Position)` and throws on false.
-     */
+    /** Validates adjacency to another position. Evaluates `adjacentTo(other: Position)` and throws on false. */
     fun validateAdjacentTo(other: Position) {
         if (!adjacentTo(other)) {
             throw IllegalMoveException()
@@ -86,6 +99,14 @@ data class Position(val x: Int, val y: Int) {
     }
 }
 
+/**
+ * The state of an entire game board, and its history.
+ *
+ * @property id the uuid for the game.
+ * @property players the list of `Piece`s in the game (at most two).
+ * @property state the play state of the game.
+ * @property positions historical list of `BoardPosition`s, with the current at the end.
+ */
 data class GameBoard(val id: UUID, var players: List<Piece>, var state: GameState, var positions: MutableList<BoardPosition>) {
 
     private var stallOccurred = false
@@ -96,6 +117,7 @@ data class GameBoard(val id: UUID, var players: List<Piece>, var state: GameStat
         boardPositionOccurrences[positions[0]] = 1
     }
 
+    /** Updates a piece's position from one position to another. Throws if the move is invalid. */
     fun updatePosition(playerPiece: Piece, fromX: Int, fromY: Int, toX: Int, toY: Int) {
 
         // Throw exception if still waiting for player or a player already won
@@ -133,6 +155,7 @@ data class GameBoard(val id: UUID, var players: List<Piece>, var state: GameStat
 
     }
 
+    /** Moves a hound from a position to another position. */
     private fun moveHound(from: Position, to: Position) {
 
         // Check that hound isn't moving backwards
@@ -154,6 +177,7 @@ data class GameBoard(val id: UUID, var players: List<Piece>, var state: GameStat
 
     }
 
+    /** Moves the hare from a position to another position. */
     private fun moveHare(from: Position, to: Position) {
 
         // Check that from position is a hare
@@ -167,14 +191,15 @@ data class GameBoard(val id: UUID, var players: List<Piece>, var state: GameStat
 
     }
 
+    /** Updates the number of occurrences that the current board position has been in play. */
     private fun updateOccurrences(position: BoardPosition) {
         val occurrences = boardPositionOccurrences[position]?.plus(1) ?: 1
         boardPositionOccurrences[position] = occurrences
-//        println(boardPositionOccurrences)
 
         stallOccurred = occurrences >= 3
     }
 
+    /** Updates the game state after a successful update of positions. Follows [game state machine logic](http://pl.cs.jhu.edu/oose/assignments/images/Game-State-Diagram.png). */
     private fun updateGameState() {
 
         when (state) {
@@ -203,9 +228,15 @@ data class GameBoard(val id: UUID, var players: List<Piece>, var state: GameStat
 
     }
 
+    /**
+     * Checks if the hounds have won by trapping the hare.
+     *
+     * @return True if hounds win, false if not.
+     */
     private fun checkHoundWin(): Boolean {
         val hare = positions.last().hare
 
+        // Hare must be cornered by the three hounds to lose, therefore hare must be in a position only adjacent to three others
         if (MOVABLE_THREE_DIRECTIONS.contains(hare)) {
             positions.last().hounds.forEach {
                 if (!it.adjacentTo(hare)) {
@@ -217,6 +248,11 @@ data class GameBoard(val id: UUID, var players: List<Piece>, var state: GameStat
         return false
     }
 
+    /**
+     * Checks if the hare has won by escape.
+     *
+     * @return True if hare escaped, false if not.
+     */
     private fun checkHareWinEscape(): Boolean {
         val hare = positions.last().hare
         for (hound in positions.last().hounds) {
