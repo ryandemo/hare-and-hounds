@@ -67,6 +67,12 @@ data class GameBoard(val id: UUID, var players: List<Piece>, var state: GameStat
     private var stallOccurred = false
     private var boardPositionOccurrences = HashMap<BoardPosition, Int>()
 
+    init {
+        // Record the initial board position
+        boardPositionOccurrences[positions[0]] = 1
+        println(boardPositionOccurrences)
+    }
+
     fun updatePosition(playerPiece: Piece, fromX: Int, fromY: Int, toX: Int, toY: Int) {
 
         // Check for correct turn
@@ -138,6 +144,7 @@ data class GameBoard(val id: UUID, var players: List<Piece>, var state: GameStat
     private fun updateOccurrences(position: BoardPosition) {
         val occurrences = boardPositionOccurrences[position]?.plus(1) ?: 1
         boardPositionOccurrences[position] = occurrences
+        println(boardPositionOccurrences)
 
         stallOccurred = occurrences >= 3
     }
