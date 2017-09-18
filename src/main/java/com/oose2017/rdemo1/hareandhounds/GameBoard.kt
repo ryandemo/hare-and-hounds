@@ -42,7 +42,7 @@ data class GameBoard(val id: UUID, var players: List<Piece>, var state: GameStat
     fun updatePosition(playerPiece: Piece, fromX: Int, fromY: Int, toX: Int, toY: Int) {
 
         // Throw exception if still waiting for player or a player already won
-        if (illegalMoveStates().contains(state)) throw IllegalMoveException()
+        if (illegalMoveStates.contains(state)) throw IllegalMoveException()
 
         // Check for correct turn
         if (!((playerPiece == Piece.HOUND && state == GameState.TURN_HOUND)

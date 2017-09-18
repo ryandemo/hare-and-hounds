@@ -21,9 +21,13 @@ object Bootstrap {
         //Specify the sub-directory from which to serve static resources (like html and css)
         staticFileLocation("/public")
 
-        // Create a new game data object
+        // Create a new game data access object
         val gameDAO = GameDAO()
+
+        // Inject gameDAO into GameService
         val gameService = GameService(gameDAO)
+
+        // Start a GameController using gameService
         GameController(gameService)
 
     }
