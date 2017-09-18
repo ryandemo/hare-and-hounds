@@ -117,7 +117,15 @@ data class GameBoard(val id: UUID, var players: List<Piece>, var state: GameStat
         boardPositionOccurrences[positions] = 1
     }
 
-    /** Updates a piece's position from one position to another. Throws if the move is invalid. */
+    /**
+     * Updates a piece's position from one position to another. Throws if the move is invalid.
+     *
+     * @param playerPiece piece to move.
+     * @param fromX x coordinate of piece to move.
+     * @param fromY y coordinate of piece to move.
+     * @param toX x coordinate to move piece to.
+     * @param toY y coordinate to move piece to.
+     */
     fun updatePosition(playerPiece: Piece, fromX: Int, fromY: Int, toX: Int, toY: Int) {
 
         // Throw exception if still waiting for player or a player already won
@@ -155,7 +163,12 @@ data class GameBoard(val id: UUID, var players: List<Piece>, var state: GameStat
 
     }
 
-    /** Moves a hound from a position to another position. */
+    /**
+     * Moves a hound from a position to another position.
+     *
+     * @param from position to move hound from.
+     * @param to position to move hound to.
+     */
     private fun moveHound(from: Position, to: Position) {
 
         // Check that hound isn't moving backwards
@@ -175,11 +188,16 @@ data class GameBoard(val id: UUID, var players: List<Piece>, var state: GameStat
 
         // Set the new `BoardPosition`
         positions = BoardPositions(positions.hare, hounds)
-        updateOccurrences(positions)
+        incrementOccurrences(positions)
 
     }
 
-    /** Moves the hare from a position to another position. */
+    /**
+     * Moves the hare from a position to another position.
+     *
+     * @param from position to move hare from.
+     * @param to position to move hare to.
+     */
     private fun moveHare(from: Position, to: Position) {
 
         // Check that from position is a hare
@@ -189,12 +207,16 @@ data class GameBoard(val id: UUID, var players: List<Piece>, var state: GameStat
 
         // Update the hare's position
         positions = BoardPositions(to, positions.hounds)
-        updateOccurrences(positions)
+        incrementOccurrences(positions)
 
     }
 
-    /** Updates the number of occurrences that the current board position has been in play. */
-    private fun updateOccurrences(position: BoardPositions) {
+    /**
+     * Increments the number of occurrences that the current board position has been in play.
+     *
+     * @param position position to increment occurrences for.
+     */
+    private fun incrementOccurrences(position: BoardPositions) {
         val occurrences = boardPositionOccurrences[position]?.plus(1) ?: 1
         boardPositionOccurrences[position] = occurrences
 
