@@ -1,5 +1,13 @@
 package com.oose2017.rdemo1.hareandhounds
 
+fun illegalMoveStates(): Set<GameState> {
+    return setOf(
+            GameState.WAITING_FOR_SECOND_PLAYER,
+            GameState.WIN_HARE_BY_ESCAPE,
+            GameState.WIN_HARE_BY_STALLING,
+            GameState.WIN_HOUND
+    )
+}
 enum class GameState {
     WAITING_FOR_SECOND_PLAYER, TURN_HARE, TURN_HOUND, WIN_HARE_BY_ESCAPE, WIN_HARE_BY_STALLING, WIN_HOUND
 }

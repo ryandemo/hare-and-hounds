@@ -7,7 +7,7 @@ data class GamePlayerInfo(val gameId: String, val playerId: String, val pieceTyp
 data class PlayerInfo(val playerId: String)
 data class PieceTypeInfo(val pieceType: Piece): Validatable {
     override fun validate() {
-        if (pieceType == null) {
+        if (pieceType == null) {  // Compiler says this is always false, but Gson can actually make it null
             throw JsonParseException("Invalid piece type")
         }
     }
@@ -45,7 +45,6 @@ class GameService(val gameDAO: GameDAO) {
             throw GameFullException()
         }
 
-        val piece = oldGameBoard.players[0].opponent()
         val players = listOf<Piece>(
                 oldGameBoard.players[0],
                 oldGameBoard.players[0].opponent()
